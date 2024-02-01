@@ -1,14 +1,14 @@
 #include "KMeans.h"
 
 int main(int argc, char **argv){
-    printf("argc: %d, argv[1]: %s\n", argc, argv[1]);
-    
+
     Point x;
     Point y;
-    Point cents[] = {x,y};
-    Point target;
-    int clust;
+    Point *cents = (Point *)malloc(sizeof(Point) * 2);
+    Point *input = (Point *)malloc(sizeof(Point) * 2);
 
+    printf("argc: %d, argv[1]: %s\n", argc, argv[1]);
+    
     x.coords = (double *)malloc(sizeof(double) * 2);
     y.coords = (double *)malloc(sizeof(double) * 2);
     x.coords[0] = 1;
@@ -18,20 +18,17 @@ int main(int argc, char **argv){
     x.dim = 2;
     y.dim = 2;
     
-    target.coords = (double *)malloc(sizeof(double) * 2);
-    target.coords[0] = 2;
-    target.coords[1] = 3;
-    target.dim = 2;
+    input[0] = x;
+    input[1] = y;
 
-    clust = FindClosestCentroid(target, cents, 2);
-
-    printf("Closest centroid to point: (%d,%d) is: %d", target.coords[0], target.coords[1], clust);
+    KMeans(2,2,2,1000,input, cents);
+    printf("CENTS: (%.4f,%.4f),(%.4f,%.4f)\n", cents[0].coords[0],cents[0].coords[1],cents[1].coords[0],cents[1].coords[1]);
 
     return 1;
 }
 
 /*K clusters, N points, d dimension, iter iterations, data - the points, centroids - the centroids.
-//Assumes valid and allocated inputs.
+//Assumes data is valid and allocated.
 //Updates centroids to be correct centroids for clusters.
 //Note: If we want the clustering, we can check for each point which cluster is the closest (outside the function)*/
 void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
@@ -46,11 +43,16 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
 
     /*Init KMEANS and PREV_Centroids*/
     for(i=0; i<K; ++i){
+        centroids[i].coords = (double *)malloc(sizeof(double) * d);
         KMEANS[i].coords = (double *)malloc(sizeof(double) * d);
         PREV_Centroids[i].coords = (double *)malloc(sizeof(double) * d);
 
         KMEANS[i].dim = d;
+        centroids[i].dim = d;
+        PREV_Centroids[i].dim = d;
         KMEANS[i].cluster = -1;
+        centroids[i].cluster = -1;
+        PREV_Centroids[i].cluster = -1;
 
         for(j=0; j<d; ++j){
             (KMEANS[i].coords)[j] = 0;
@@ -69,7 +71,7 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
         PREV_Centroids[i].dim = d;
         PREV_Centroids[i].cluster = -1; /*The centroids aren't a part of a cluster.*/
     }
-
+    
     do{
         /*Init means and No. of points to zero.*/
         for(i=0; i<K; ++i){
