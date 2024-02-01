@@ -5,16 +5,27 @@ int main(int argc, char **argv){
     
     Point x;
     Point y;
+    Point cents[] = {x,y};
+    Point target;
+    int clust;
+
     x.coords = (double *)malloc(sizeof(double) * 2);
     y.coords = (double *)malloc(sizeof(double) * 2);
-    x.coords[0] = 13;
-    x.coords[1] = 16;
-    y.coords[0] = 20;
-    y.coords[1] = 12;
+    x.coords[0] = 1;
+    x.coords[1] = 2;
+    y.coords[0] = 4;
+    y.coords[1] = 1;
     x.dim = 2;
     y.dim = 2;
-    printf("x: (%.4f,%.4f), y: (%.4f,%.4f)\n",x.coords[0],x.coords[1],y.coords[0],y.coords[1]);
-    printf("Distance: %.4f\n", dist(x,y));
+    
+    target.coords = (double *)malloc(sizeof(double) * 2);
+    target.coords[0] = 2;
+    target.coords[1] = 3;
+    target.dim = 2;
+
+    clust = FindClosestCentroid(target, cents, 2);
+
+    printf("Closest centroid to point: (%d,%d) is: %d", target.coords[0], target.coords[1], clust);
 
     return 1;
 }
