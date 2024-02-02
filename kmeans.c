@@ -41,7 +41,7 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
     double *Delta_vector = (double *)malloc(sizeof(double) * K); /*the differences between previous and current centroids.*/
     int *PtCounter = (int *)malloc(sizeof(int) * K); /*Number of points (each cluster is represented by index)*/
 
-    /*Init KMEANS and PREV_Centroids*/
+    /*Init KMEANS, centroids and PREV_Centroids*/
     for(i=0; i<K; ++i){
         centroids[i].coords = (double *)malloc(sizeof(double) * d);
         KMEANS[i].coords = (double *)malloc(sizeof(double) * d);
@@ -50,6 +50,7 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
         KMEANS[i].dim = d;
         centroids[i].dim = d;
         PREV_Centroids[i].dim = d;
+        
         KMEANS[i].cluster = -1;
         centroids[i].cluster = -1;
         PREV_Centroids[i].cluster = -1;
