@@ -22,6 +22,7 @@ int FindClosestCentroid(Point, Point *, int);
 double dist(Point, Point);
 void ADD(Point, Point);
 void MULT(Point, double);
+int isInt(char *);
 
 
 #endif

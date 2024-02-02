@@ -1,30 +1,105 @@
 #include "KMeans.h"
 
+#define DEF_MAX_ITER 200
+
 int main(int argc, char **argv){
+    /*Declarations*/
+    int i; int j; /*Loop variables*/
+    char *line = NULL; /*Buffer to hold line*/
+    size_t strSize = 0; /*For getline() syntax*/
+    char *restOfLine;
 
-    Point x;
-    Point y;
-    Point *cents = (Point *)malloc(sizeof(Point) * 2);
-    Point *input = (Point *)malloc(sizeof(Point) * 2);
+    int K; /*Number of clusters*/
+    int N; /*Number of data-points*/
+    int d; /*Dimension of each point*/
+    int max_iter; /*Max iterations of K-means algorithm*/
+    Point *centroids; /*Centroids pointer to be updateed by K-means*/
+    Point *dataPoints; /*Data points array*/
 
-    printf("argc: %d, argv[1]: %s\n", argc, argv[1]);
-    
-    x.coords = (double *)malloc(sizeof(double) * 2);
-    y.coords = (double *)malloc(sizeof(double) * 2);
-    x.coords[0] = 1;
-    x.coords[1] = 2;
-    y.coords[0] = 4;
-    y.coords[1] = 1;
-    x.dim = 2;
-    y.dim = 2;
-    
-    input[0] = x;
-    input[1] = y;
+    /*Check valid number of inpus and assign value to max_iter*/
+    switch(argc){
+        case 1:
+        case 2:
+        case 3:
+            fprintf(stderr, "An Error Has Occurred\n");
+            return 1; /*Break is not needed here since we get out of main*/
+        case 4: /*Here max_iter gets default value - not provided*/
+            max_iter = DEF_MAX_ITER;
+            break;
+        case 5:
+            if(!(isInt(argv[4])) || atoi(argv[4]) >= 1000 || atoi(argv[4]) <= 1){ /*Check for valid input*/
+                fprintf(stderr, "Invalid maximum iteration!\n");
+                return 1; /*Break is not needed here since we get out of main*/
+            }
+            max_iter = atoi(argv[4]);
+            break;
+        default:
+            fprintf(stderr, "An Error Has Occurred\n");
+            return 1; /*Break is not needed here since we get out of main*/
+    }
 
-    KMeans(2,2,2,1000,input, cents);
-    printf("CENTS: (%.4f,%.4f),(%.4f,%.4f)\n", cents[0].coords[0],cents[0].coords[1],cents[1].coords[0],cents[1].coords[1]);
+    /*Check for valid inputs*/
+    if(!(isInt(argv[2])) || atoi(argv[2] <= 1)){
+        fprintf(stderr, "Invalid number of points!\n");
+        return 1;
+    }
+    if(!(isInt(argv[1])) || atoi(argv[1]) <= 1 || atoi(argv[1]) >= atoi(argv[2])){
+        fprintf(stderr, "Invalid number of clusters!\n");
+        return 1;
+    }
+    if(!(isInt(argv[3]))){
+        fprintf(stderr, "Invalid dimension of point!\n");
+        return 1;
+    }
 
-    return 1;
+    /*Assign values to variables and allocate memory to pointers*/
+    K = atoi(argv[1]);
+    N = atoi(argv[2]);
+    d = atoi(argv[3]);
+    centroids = (Point *)malloc(sizeof(Point) * K);
+    dataPoints = (Point *)malloc(sizeof(Point) * N);
+    for(i=0; i<N; ++i){
+        dataPoints[i].coords = (double *)malloc(sizeof(double) * d);
+    }
+
+    /*Take input from stdin into dataPoints*/
+    for(i=0; i<N; ++i){
+        getline(&line, &strSize, stdin);
+
+        for(j=0; j<d; ++j){
+            (dataPoints[i].coords)[j] = strtod(line, &restOfLine);
+            if(j < d-1){
+                restOfLine++; /*Skip comma*/
+            }
+        }
+    }
+
+    /*Apply K-means algorithm to points*/
+    KMeans(K,N,d,max_iter, dataPoints, centroids);
+
+    /*Print new centroids*/
+    for(i=0; i<K; ++i){
+        for(j=0; j<d; ++j){
+            printf("%.4f", (centroids[i].coords)[j]);
+            if(i < d-1){
+                printf(",");
+            }
+        }
+        printf("\n");
+    }
+
+    /*Free allocated memory*/
+    for(i=0; i<N; ++i){
+        if(i<K){
+            free(centroids[i].coords);
+        }
+        free(dataPoints[i].coords);
+    }
+    free(dataPoints);
+    free(centroids);
+    free(line);
+
+    return 0;
 }
 
 /*K clusters, N points, d dimension, iter iterations, data - the points, centroids - the centroids.
@@ -116,6 +191,17 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
 
         iterations++;
     }while(iterations < iter && END_FLAG == 0);
+
+    /*Free memory allocated for local variables*/
+    for(i=0; i<K; ++i){
+        free(KMEANS[i].coords);
+        free(PREV_Centroids[i].coords);
+    }
+    free(KMEANS);
+    free(PREV_Centroids);
+    free(Delta_vector);
+    free(PtCounter);
+    /*Centroids is not freed since it's the "Output" of the KMeans function*/
 }
 
 /*Finds closest centroid (denoted by cluster number) to a given point*/
@@ -162,4 +248,15 @@ void MULT(Point a, double x){
     for(i=0; i<a.dim; ++i){
         a.coords[i] *= x;
     }
+}
+
+/*Checks if string represent an int*/
+int isInt(char *s){
+    int i;
+    for (i = 0; s[i]!= '\0'; i++){
+        if (!(48 <= s[i] && s[i] <= 57)){
+            return 0;
+        }
+    }
+    return 1;
 }
