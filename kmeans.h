@@ -23,6 +23,7 @@ double dist(Point, Point);
 void ADD(Point, Point);
 void MULT(Point, double);
 int isInt(char *);
+size_t getline(char **, size_t *, FILE *);
 
 
 #endif

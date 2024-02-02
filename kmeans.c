@@ -1,13 +1,13 @@
-#include "KMeans.h"
+#include "kmeans.h"
 
 #define DEF_MAX_ITER 200
 
 int main(int argc, char **argv){
     /*Declarations*/
     int i; int j; /*Loop variables*/
-    char *line = NULL; /*Buffer to hold line*/
+    char *line; /*Buffer to hold line*/
     size_t strSize = 0; /*For getline() syntax*/
-    char *restOfLine;
+    char *lnptr;
 
     int K; /*Number of clusters*/
     int N; /*Number of data-points*/
@@ -39,7 +39,7 @@ int main(int argc, char **argv){
     }
 
     /*Check for valid inputs*/
-    if(!(isInt(argv[2])) || atoi(argv[2] <= 1)){
+    if(!(isInt(argv[2])) || atoi(argv[2]) <= 1){
         fprintf(stderr, "Invalid number of points!\n");
         return 1;
     }
@@ -65,13 +65,16 @@ int main(int argc, char **argv){
     /*Take input from stdin into dataPoints*/
     for(i=0; i<N; ++i){
         getline(&line, &strSize, stdin);
-
+        lnptr = line; /*Save pointer for start of line to free*/
         for(j=0; j<d; ++j){
-            (dataPoints[i].coords)[j] = strtod(line, &restOfLine);
-            if(j < d-1){
-                restOfLine++; /*Skip comma*/
-            }
+            (dataPoints[i].coords)[j] = strtod(line, &line);
+            line++; /*Skip comma*/
         }
+        dataPoints[i].dim = d;
+        dataPoints[i].cluster = -1;
+        /*Free allocated line*/
+        free(lnptr);
+        strSize = 0;
     }
 
     /*Apply K-means algorithm to points*/
@@ -81,13 +84,12 @@ int main(int argc, char **argv){
     for(i=0; i<K; ++i){
         for(j=0; j<d; ++j){
             printf("%.4f", (centroids[i].coords)[j]);
-            if(i < d-1){
+            if(j < d-1){
                 printf(",");
             }
         }
         printf("\n");
     }
-
     /*Free allocated memory*/
     for(i=0; i<N; ++i){
         if(i<K){
@@ -97,7 +99,6 @@ int main(int argc, char **argv){
     }
     free(dataPoints);
     free(centroids);
-    free(line);
 
     return 0;
 }
@@ -163,7 +164,7 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
             ADD(KMEANS[data[i].cluster], data[i]); /*Add points to according sums*/
             PtCounter[data[i].cluster]++; /*Add to counter for according cluster*/
         }
-           
+    
         for(i=0; i<K; ++i){
             MULT(KMEANS[i], (1.0/(double)PtCounter[i])); /*Normalize the summations, creating the means*/
 
@@ -191,7 +192,6 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
 
         iterations++;
     }while(iterations < iter && END_FLAG == 0);
-
     /*Free memory allocated for local variables*/
     for(i=0; i<K; ++i){
         free(KMEANS[i].coords);
@@ -207,12 +207,13 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
 /*Finds closest centroid (denoted by cluster number) to a given point*/
 int FindClosestCentroid(Point x, Point *centroids, int K){
     int i;
-    int assigned;
-    double mindist = DBL_MAX;
-
+    int assigned = 0;
+    double mindist = dist(x,centroids[0]);
+    double curdist;
     for(i=0; i<K; ++i){
-        if(dist(x, centroids[i]) < mindist){
-            mindist = dist(x, centroids[i]);
+        curdist = dist(x,centroids[i]);
+        if(curdist < mindist){
+            mindist = curdist;
             assigned = i;
         }
     }
