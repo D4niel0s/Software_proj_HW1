@@ -5,9 +5,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-/*Included fot DBL_MAX*/
-#include <float.h> 
-
 typedef struct point{
     double *coords; /*Coordinates of the vector will be inserted here. (memory allocation in main)*/
     int dim; /*Dimension.*/
