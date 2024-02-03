@@ -1,4 +1,5 @@
 import math
+import sys
 
 class Point:
     def __init__(self, coords, dim, cluster):
@@ -6,19 +7,34 @@ class Point:
         self.dim = dim
         self.cluster = cluster    
 
-
 def main():
-    x = Point([1,2],2,-1)
-    y = Point([3,4],2,-1)
-    z = Point([5,6],2,-1)
-    w = Point([7,8],2,-1)
-    p = Point([9,10],2,-1)
-    centroids = KMeans(2,5,2,500,[x,y,z,w,p])
-    for i in range(len(centroids)):
-        print("{:.4},{:.4}".format(centroids[i].coords[0],centroids[i].coords[1]))
+    #Need to make checks
+    K = int(sys.argv[1]) # Number of clusters
+    N = int(sys.argv[2]) # Number of points
+    d = int(sys.argv[3]) # Dimension of points
+    iter = int(sys.argv[4]) # Max iteration number
+    
+    data = [Point([0]*d,d,-1)]*N # Initialize data array to default values
+    file = open(sys.argv[5],'r')
+
+    for i in range(N):
+        line = file.readline()
+        args = line.split(",")
+        data[i]= Point(list(map(float,args)), d, -1) #map function applies float() to each element of args, then turn it to a list using list()
+
+    centroids = KMeans(K, N, d, iter, data)
+    
+    #Print centroids
+    for i in range(K):
+        for j in range(d):
+            print("{:.4f}".format(centroids[i].coords[j]), end='')
+            if(j<d-1):
+                print(',',end='')
+        print()
 
 
-#Main logic of kmeans algorithm
+
+#Main logic of kmeans algorithm (Returns new centroids)
 def KMeans(K, N, d, iter, data):
     Epsilon = 0.001 #Convergence threshold
     iteration = 0 #Counts iterations
