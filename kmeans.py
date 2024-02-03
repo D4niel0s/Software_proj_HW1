@@ -38,12 +38,9 @@ def KMeans(K, N, d, iter, data):
             PtCtr[data[i].cluster] += 1 #Point assigned to cluster - increase count
             KMEANS[data[i].cluster] = ADD(data[i], KMEANS[data[i].cluster], d) #Add point to according mean's sum
 
-        #Normalize mean for each cluster
+        #Normalize mean for each cluster and compute difference vector
         for i in range(K):
             KMEANS[i] = MULT(KMEANS[i], 1.0/float(PtCtr[i]), d)
-
-        #Compute difference vector
-        for i in range(K):
             DeltaVector[i] = dist(centroids[i], KMEANS[i], d)
 
         #Update the centroids
