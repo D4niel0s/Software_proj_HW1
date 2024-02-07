@@ -7,21 +7,47 @@ class Point:
         self.dim = dim
         self.cluster = cluster    
 
+
+DEF_MAX_ITER = 200
 def main():
-    #Need to make checks
-    K = int(sys.argv[1]) # Number of clusters
-    N = int(sys.argv[2]) # Number of points
-    d = int(sys.argv[3]) # Dimension of points
-    iter = int(sys.argv[4]) # Max iteration number
+    argc = len(sys.argv)
+    if(argc == 5):
+        iter = DEF_MAX_ITER
+        file = open(sys.argv[4],'r')
+    elif(argc == 6):
+        if(isInt(sys.argv[4]) and 1<int(sys.argv[4]) and int(sys.argv[4])<1000):
+            iter = int(sys.argv[4]) # Max iteration number
+        else:
+            print("Invalid maximum iteration!")
+            return 1
+        file = open(sys.argv[5],'r')
+    else:
+        print("An error has occured")
+        return 1
+
+    if(isInt(sys.argv[2]) and int(sys.argv[2]) > 1):
+        N = int(sys.argv[2]) # Number of points
+    else:
+        print("Invalid number of points!")
+        return 1
+    if(isInt(sys.argv[1]) and 1 < int(sys.argv[1]) and int(sys.argv[1]) < N):
+        K = int(sys.argv[1]) # Number of clusters
+    else:
+        print("Invalid number of clusters!")
+        return 1
+    if(isInt(sys.argv[3]) and int(sys.argv[3]) > 0):
+        d = int(sys.argv[3]) # Dimension of points
+    else:
+        print("Invalid dimension of point!")
+        return 1
     
     data = [Point([0]*d,d,-1)]*N # Initialize data array to default values
-    file = open(sys.argv[5],'r')
 
     for i in range(N):
         line = file.readline()
         args = line.split(",")
         data[i]= Point(list(map(float,args)), d, -1) #map function applies float() to each element of args, then turn it to a list using list()
-
+    
     centroids = KMeans(K, N, d, iter, data)
     
     #Print centroids
@@ -31,6 +57,8 @@ def main():
             if(j<d-1):
                 print(',',end='')
         print()
+    
+    return 0
 
 
 
@@ -42,7 +70,7 @@ def KMeans(K, N, d, iter, data):
 
     #Init centroids to be first K dataPoints
     centroids = data[: K].copy()
-
+    
     while True:
         #Reset means and counters for next iteration
         PtCtr = [0]*K #Counts points in each cluster (each index represents a cluster)
@@ -110,6 +138,14 @@ def MULT(x,z, dim):
         res.coords[i] = x.coords[i] * z
 
     return res
+
+def isInt(inp):
+    flag = True
+    try:
+        int(inp)
+    except ValueError:
+        flag = False
+    return flag
 
 if __name__ == "__main__":
     main()
