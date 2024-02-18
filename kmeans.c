@@ -16,6 +16,8 @@ int main(int argc, char **argv){
     Point *centroids; /*Centroids pointer to be updateed by K-means*/
     Point *dataPoints; /*Data points array*/
 
+    short ERR_FLAG = 0; /*Flag is error has occured inside function/allocation.*/
+
     /*Check valid number of inpus and assign value to max_iter*/
     switch(argc){
         case 1:
@@ -58,8 +60,20 @@ int main(int argc, char **argv){
     d = atoi(argv[3]);
     centroids = (Point *)malloc(sizeof(Point) * K);
     dataPoints = (Point *)malloc(sizeof(Point) * N);
+
+    if(centroids == NULL || dataPoints == NULL){
+        fprintf(stderr, "An Error Has Occurred\n");
+        ERR_FLAG = 1;
+        goto FREE1;
+    }
+
     for(i=0; i<N; ++i){
         dataPoints[i].coords = (double *)malloc(sizeof(double) * d);
+        if(dataPoints[i].coords == NULL){
+            fprintf(stderr, "An Error Has Occurred\n");
+            ERR_FLAG = 1;
+            goto FREE1;
+        }
     }
 
     /*Take input from stdin into dataPoints*/
@@ -78,18 +92,22 @@ int main(int argc, char **argv){
     }
 
     /*Apply K-means algorithm to points*/
-    KMeans(K,N,d,max_iter, dataPoints, centroids);
+    KMeans(K,N,d,max_iter, dataPoints, centroids, &ERR_FLAG);
 
-    /*Print new centroids*/
-    for(i=0; i<K; ++i){
-        for(j=0; j<d; ++j){
-            printf("%.4f", (centroids[i].coords)[j]);
-            if(j < d-1){
-                printf(",");
+    if(!ERR_FLAG){
+        /*Print new centroids (only if error isn't encountered during K-Means)*/
+        for(i=0; i<K; ++i){
+            for(j=0; j<d; ++j){
+                printf("%.4f", (centroids[i].coords)[j]);
+                if(j < d-1){
+                    printf(",");
+                }
             }
+            printf("\n");
         }
-        printf("\n");
     }
+
+    FREE1: /*Label here to jump if allocation fails.*/
     /*Free allocated memory*/
     for(i=0; i<N; ++i){
         if(i<K){
@@ -100,28 +118,40 @@ int main(int argc, char **argv){
     free(dataPoints);
     free(centroids);
 
-    return 0;
+    return ERR_FLAG;
 }
 
-/*K clusters, N points, d dimension, iter iterations, data - the points, centroids - the centroids.
+/*K clusters, N points, d dimension, iter iterations, data - the points, centroids - the centroids .
 //Assumes data is valid and allocated.
-//Updates centroids to be correct centroids for clusters.
+//Assumes centroids size matches clusters number, overrides centroids' data.
 //Note: If we want the clustering, we can check for each point which cluster is the closest (outside the function)*/
-void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
+void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids, short *ERR_FLAG){
     int i; int j; int iterations = 0;
     double Epsilon = 0.001;
     short END_FLAG = 0;
-
+    
     Point *KMEANS = (Point *)malloc(sizeof(Point) * K); /*The mean (each cluster is represented by index)*/
     Point *PREV_Centroids = (Point *)malloc(sizeof(Point) * K); /*The previous mean (each cluster is represented by index)*/
     double *Delta_vector = (double *)malloc(sizeof(double) * K); /*the differences between previous and current centroids.*/
     int *PtCounter = (int *)malloc(sizeof(int) * K); /*Number of points (each cluster is represented by index)*/
 
+    if(KMEANS == NULL || PREV_Centroids == NULL || Delta_vector == NULL || PtCounter == NULL){
+        fprintf(stderr, "An Error Has Occurred\n");
+        *ERR_FLAG = 1;
+        goto FREE;
+    }
+
     /*Init KMEANS, centroids and PREV_Centroids*/
     for(i=0; i<K; ++i){
-        centroids[i].coords = (double *)malloc(sizeof(double) * d);
-        KMEANS[i].coords = (double *)malloc(sizeof(double) * d);
-        PREV_Centroids[i].coords = (double *)malloc(sizeof(double) * d);
+        centroids[i].coords = (double *)malloc(sizeof(double) * d); /*No need to zero this array because we copy into it*/
+        KMEANS[i].coords = (double *)calloc(sizeof(double) ,d); /*Init to zero.*/
+        PREV_Centroids[i].coords = (double *)malloc(sizeof(double) * d); /*Same here - no need to zero.*/
+
+        if(centroids[i].coords == NULL || KMEANS[i].coords == NULL || PREV_Centroids[i].coords == NULL){
+            fprintf(stderr, "An Error Has Occurred\n");
+            *ERR_FLAG = 1;
+            goto FREE;
+        }
 
         KMEANS[i].dim = d;
         centroids[i].dim = d;
@@ -130,10 +160,6 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
         KMEANS[i].cluster = -1;
         centroids[i].cluster = -1;
         PREV_Centroids[i].cluster = -1;
-
-        for(j=0; j<d; ++j){
-            (KMEANS[i].coords)[j] = 0;
-        }
     }
 
     /*Init centroids to be first k datapoints*/
@@ -155,10 +181,11 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
             PtCounter[i] = 0;
 
             for(j=0; j<d; ++j){
-                (KMEANS[i].coords)[j] = 0;
+                (KMEANS[i].coords)[j] = 0; /*Although we start with zeroed KMEANS, we need this line for next iteration(s).*/
             }
         }
 
+        /*Assignment stage*/
         for(i=0; i<N; ++i){ 
             data[i].cluster = FindClosestCentroid(data[i], centroids, K);/*Categorize points to clusters*/
             ADD(KMEANS[data[i].cluster], data[i]); /*Add points to according sums*/
@@ -192,6 +219,8 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
 
         iterations++;
     }while(iterations < iter && END_FLAG == 0);
+
+    FREE: /*Label here for jumping to free if allocation(s) fail.*/
     /*Free memory allocated for local variables*/
     for(i=0; i<K; ++i){
         free(KMEANS[i].coords);
@@ -201,7 +230,7 @@ void KMeans(int K, int N, int d, int iter, Point *data, Point *centroids){
     free(PREV_Centroids);
     free(Delta_vector);
     free(PtCounter);
-    /*Centroids is not freed since it's the "Output" of the KMeans function*/
+    /*Centroids is not freed since it's the "Output" of the KMeans function (Should be freed outside)*/
 }
 
 /*Finds closest centroid (denoted by cluster number) to a given point*/
