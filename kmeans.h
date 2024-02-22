@@ -14,7 +14,7 @@ typedef struct point{
 
 
 int main(int, char **);
-void KMeans(int, int, int, int,Point *, Point *);
+void KMeans(int, int, int, int,Point *, Point *, short *);
 int FindClosestCentroid(Point, Point *, int);
 double dist(Point, Point);
 void ADD(Point, Point);
