@@ -22,7 +22,7 @@ Init - Assign the initial centroids to be the first K data-points.
 - Iteration limit is the maximum iterations the user allows; Another degree of freedom in the algorithm. (In my case, 1<max_iter<1000)
 
 # My implementation
-I was required to implement the K-means algorithm in both C and Python. 
+The project required to implement the K-means algorithm in both C and Python. 
 Each implementation has it's nuances and uses different tools to reach a similar goal.
 
 ## C implementation
@@ -58,3 +58,6 @@ After running, the algorithm will output the final clustering centroids to ```ST
 To check each point's cluster, we can use the ```FindClosestCentroid()``` function which is included.
   
 ## Python implementation
+The Python implementation follows similar motives as to the C implementation:
+ - Points are represented as instances of the Point class
+ - I/O is as expected above
